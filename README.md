@@ -150,7 +150,9 @@ CDD_ID Derived:  0x9444ce1ca187d60c77d31329160a236ecf7a1a65deba1c32a750baeb676fb
 ****Polymesh***** Writing CDD Attestation
 CDD Attestation Written
 New User:  0xe68edc3585d89142240bca208e51b774f5400570119b9d3120f2f3b567b37095 7b45a874-a106-4057-b82e-f47cb42ccad7
+```
 
+```
 Redirecting New User: 
  {
   "primary_key": "5FpoC8Nsoy2Ur3vHobch4do9igSCADNdUBwStJoYXN6Eib1c",
@@ -184,7 +186,9 @@ Primary Key is unused
 ****PUIS***** Getting Swagger Client
 ****PUIS***** Checking if PII hash exists
 Redirected User:  Polymath https://polymath.network/
+```
 
+```
 Creating Second Claim On Existing DID: 
  {
   "primary_key": "5GUKzjVpS7cLgKPnPskmq6xhCAx4YWqo9DgFQ8DFdvabMn3f",
