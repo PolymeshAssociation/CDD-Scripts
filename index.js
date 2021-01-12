@@ -1,5 +1,5 @@
 const { Polymesh } = require('@polymathnetwork/polymesh-sdk');
-const { ClaimType } = require('@polymathnetwork/polymesh-sdk/types');
+const { ClaimType, ScopeType } = require('@polymathnetwork/polymesh-sdk/types');
 const { encodeAddress } = require('@polkadot/keyring');
 const SwaggerClient = require('swagger-client');
 const BigNumber = require('bignumber.js');
@@ -82,7 +82,7 @@ async function new_user(primary_key, pii_hash) {
     await writeCddClaim(polymesh, identity.did, cdd_id)
     console.log('CDD Attestation Written')
 
-    return [true, identity.did, v4_unique_id];
+    return [true, identity.did, unique_id, cdd_id];
 
 }
 
@@ -204,7 +204,7 @@ async function existing_user_with_new_identity(primary_key, pii_hash, v4_unique_
     await writeCddClaim(polymesh, identity.did, cdd_id)
     console.log('CDD Attestation Written');
 
-    return [true, identity.did]
+    return [true, identity.did, cdd_id]
 
 }
 
@@ -212,6 +212,14 @@ async function getPolymesh() {
     const api = await Polymesh.connect({
         nodeUrl: 'ws://127.0.0.1:9944',
         accountUri: '//Alice',
+    });
+    return api;
+}
+
+async function getPolymeshCharlie() {
+    const api = await Polymesh.connect({
+        nodeUrl: 'ws://127.0.0.1:9944',
+        accountUri: '//Charlie',
     });
     return api;
 }
@@ -281,6 +289,51 @@ async function writeCddClaim(polymesh, did, cdd_id) {
                 },
             },
         ]}
+    )
+    await transactionQ.run();
+}
+
+async function transferPolyX(polymesh, to, amount) {
+    let transactionQ = await polymesh.transferPolyX({
+        to: to,
+        amount: amount
+    });
+    await transactionQ.run();
+}
+
+//NB - this is not needed by CDD providers, but uses CDD claims (specifically the CDD_ID)
+async function writeInvestorUniquenessClaim(polymesh, did, unique_id, scope_did, cdd_id) {
+    console.log('****Confidential Identity Library***** Generating InvestorUniquenessProof');
+    let iu_proof = confidential_identity.process_create_claim_proof(
+        JSON.stringify({
+            investor_did: Array.from(hexToU8a(did)),
+            investor_unique_id: Array.from(hexToU8a(unique_id))
+        }),
+        JSON.stringify({
+            scope_did: Array.from(hexToU8a(scope_did)),
+            investor_unique_id: Array.from(hexToU8a(unique_id))
+        })
+    );
+    let proof = "0x" + createHexString(JSON.parse(iu_proof).proof);
+    let scope_id = "0x" + createHexString(JSON.parse(iu_proof).scope_id);
+    console.log('****Polymesh***** Writing InvestorUniqueness Claim');
+    let claims = polymesh.claims;
+    let args = {
+        target: did,
+        cddId: cdd_id,
+        proof: proof,
+        scope: {type: ScopeType.Ticker, value: scope_did},
+        scope_id: scope_id
+    };
+    console.log(args);
+    let transactionQ = await claims.addInvestorUniquenessClaim(
+        {
+            target: did,
+            cddId: cdd_id,
+            proof: proof,
+            scope: {type: ScopeType.Ticker, value: scope_did},
+            scopeId: scope_id
+        }
     )
     await transactionQ.run();
 }
@@ -376,60 +429,83 @@ async function main() {
     let did;
     let result;
 
-    // Onboard a new user
-    console.log("Creating New User: \n", JSON.stringify({primary_key: primary_key, pii_hash: pii_hash}, null, 2));
+    // // Onboard a new user
+    // console.log("Creating New User: \n", JSON.stringify({primary_key: primary_key, pii_hash: pii_hash}, null, 2));
+    // try {
+    //     [result, did, uuid, cdd_id] = await new_user(primary_key, pii_hash);
+    //     if (!result) {
+    //         throw new Error("NewUserUnexpectedError");
+    //     }
+    //     console.log("New User: ", did, uuid, cdd_id);
+    // } catch (err) {
+    //     console.log("Unexpected Error: ", err);
+    //     return;
+    // }
+
+    // Create a new CDD claim for Charlie
+    // This allows us to then generate an investor uniqueness claim (since only the identity can write IU claims for itself)
+    let charles_pii_hash = createDummyPiiHash();
+    const polymesh_charles = await getPolymeshCharlie();
+    const polymesh_alice = await getPolymesh();
+    let charles_primary_key = polymesh_charles.getAccount().key;
+    console.log("Creating InvestorUniqueness claim for Alice: \n", JSON.stringify({primary_key: charles_primary_key, pii_hash: charles_pii_hash}, null, 2));
     try {
-        [result, did, uuid] = await new_user(primary_key, pii_hash);
+        [result, did, uuid, cdd_id] = await new_user(charles_primary_key, charles_pii_hash);
         if (!result) {
             throw new Error("NewUserUnexpectedError");
         }
-        console.log("New User: ", did, uuid);
+        console.log("Charlie: ", did, uuid, cdd_id);
+        await transferPolyX(polymesh_alice, charles_primary_key, new BigNumber(1000));
+        // NB - this step is not performed by CDD providers - for reference only
+        // Write a InvestorUniqueness claim for new user
+        let scope_did = "0x41434d450000000000000000"; //ACME
+        await writeInvestorUniquenessClaim(polymesh_charles, did, uuid, scope_did, cdd_id);
     } catch (err) {
         console.log("Unexpected Error: ", err);
         return;
     }
 
-    let new_primary_key = createDummyAccount();
-    console.log("Redirecting New User: \n", JSON.stringify({primary_key: new_primary_key, pii_hash: pii_hash}, null, 2));
-    try {
-        let provider_name;
-        let provider_url;
-        [result, provider_name, provider_url] = await new_user(new_primary_key, pii_hash);
-        if (result) {
-            throw new Error("RedirectedUserUnexpectedError");
-        }
-        console.log("Redirected User: ", provider_name, provider_url);
-    } catch (err) {
-        console.log("Unexpected Error: ", err);
-        return;
-    }
+    // let new_primary_key = createDummyAccount();
+    // console.log("Redirecting New User: \n", JSON.stringify({primary_key: new_primary_key, pii_hash: pii_hash}, null, 2));
+    // try {
+    //     let provider_name;
+    //     let provider_url;
+    //     [result, provider_name, provider_url] = await new_user(new_primary_key, pii_hash);
+    //     if (result) {
+    //         throw new Error("RedirectedUserUnexpectedError");
+    //     }
+    //     console.log("Redirected User: ", provider_name, provider_url);
+    // } catch (err) {
+    //     console.log("Unexpected Error: ", err);
+    //     return;
+    // }
 
-    // Create second CDD claim on existing identity
-    console.log("Creating Second Claim On Existing DID: \n", JSON.stringify({primary_key: primary_key, pii_hash: pii_hash, uuid: uuid, did: did}, null, 2));
-    try {
-        result = await existing_user_with_existing_identity(primary_key, pii_hash, uuid, did);
-        if (!result) {
-            throw new Error("ExistingUserExistingIdentityUnexpectedError");
-        }
-        console.log("Existing User, Existing Identity: ", did, uuid)
-    } catch (err) {
-        console.log("Unexpected Error: ", err);
-        return;
-    }
+    // // Create second CDD claim on existing identity
+    // console.log("Creating Second Claim On Existing DID: \n", JSON.stringify({primary_key: primary_key, pii_hash: pii_hash, uuid: uuid, did: did}, null, 2));
+    // try {
+    //     result = await existing_user_with_existing_identity(primary_key, pii_hash, uuid, did);
+    //     if (!result) {
+    //         throw new Error("ExistingUserExistingIdentityUnexpectedError");
+    //     }
+    //     console.log("Existing User, Existing Identity: ", did, uuid)
+    // } catch (err) {
+    //     console.log("Unexpected Error: ", err);
+    //     return;
+    // }
 
-    // Create second CDD claim on new identity
-    let new_did;
-    console.log("Creating Second Claim On New DID: \n", JSON.stringify({primary_key: new_primary_key, pii_hash: pii_hash, uuid: uuid}, null, 2));
-    try {
-        [result, new_did] = await existing_user_with_new_identity(new_primary_key, pii_hash, uuid);
-        if (!result) {
-            throw new Error("ExistingUserNewIdentityUnexpectedError");
-        }
-        console.log("Existing User, New Identity: ", did, uuid)
-    } catch (err) {
-        console.log("Unexpected Error: ", err);
-        return;
-    }
+    // // Create second CDD claim on new identity
+    // let new_did;
+    // console.log("Creating Second Claim On New DID: \n", JSON.stringify({primary_key: new_primary_key, pii_hash: pii_hash, uuid: uuid}, null, 2));
+    // try {
+    //     [result, new_did] = await existing_user_with_new_identity(new_primary_key, pii_hash, uuid);
+    //     if (!result) {
+    //         throw new Error("ExistingUserNewIdentityUnexpectedError");
+    //     }
+    //     console.log("Existing User, New Identity: ", did, uuid)
+    // } catch (err) {
+    //     console.log("Unexpected Error: ", err);
+    //     return;
+    // }
 }
 
 main();
