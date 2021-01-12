@@ -318,17 +318,8 @@ async function writeInvestorUniquenessClaim(polymesh, did, unique_id, scope_did,
     let scope_id = "0x" + createHexString(JSON.parse(iu_proof).scope_id);
     console.log('****Polymesh***** Writing InvestorUniqueness Claim');
     let claims = polymesh.claims;
-    let args = {
-        target: did,
-        cddId: cdd_id,
-        proof: proof,
-        scope: {type: ScopeType.Ticker, value: scope_did},
-        scope_id: scope_id
-    };
-    console.log(args);
     let transactionQ = await claims.addInvestorUniquenessClaim(
         {
-            target: did,
             cddId: cdd_id,
             proof: proof,
             scope: {type: ScopeType.Ticker, value: scope_did},
