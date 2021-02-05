@@ -75,7 +75,7 @@ async function new_user(primary_key, pii_hash) {
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id)
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -135,7 +135,7 @@ async function existing_user_with_existing_identity(primary_key, pii_hash, v4_un
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id) 
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -197,7 +197,7 @@ async function existing_user_with_new_identity(primary_key, pii_hash, v4_unique_
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id)
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -302,9 +302,9 @@ async function transferPolyX(polymesh, to, amount) {
 }
 
 //NB - this is not needed by CDD providers, but uses CDD claims (specifically the CDD_ID)
-async function writeInvestorUniquenessClaim(polymesh, did, unique_id, scope_did, cdd_id) {
+async function writeInvestorUniquenessClaim(polymesh, did, unique_id, scope_did, cdd_id, blind) {
     console.log('****Confidential Identity Library***** Generating InvestorUniquenessProof');
-    let iu_proof = confidential_identity.process_create_claim_proof(
+    let iu_proof = confidential_identity.process_create_claim_proof_bad(
         JSON.stringify({
             investor_did: Array.from(hexToU8a(did)),
             investor_unique_id: Array.from(hexToU8a(unique_id))
@@ -312,12 +312,18 @@ async function writeInvestorUniquenessClaim(polymesh, did, unique_id, scope_did,
         JSON.stringify({
             scope_did: Array.from(hexToU8a(scope_did)),
             investor_unique_id: Array.from(hexToU8a(unique_id))
+        }),
+        JSON.stringify({
+            blind: Array.from(hexToU8a(blind))
         })
     );
     let proof = "0x" + createHexString(JSON.parse(iu_proof).proof);
     let scope_id = "0x" + createHexString(JSON.parse(iu_proof).scope_id);
     console.log('****Polymesh***** Writing InvestorUniqueness Claim');
     let claims = polymesh.claims;
+    console.log(cdd_id);
+    console.log(scope_id);
+    console.log(proof);
     let transactionQ = await claims.addInvestorUniquenessClaim(
         {
             cddId: cdd_id,
@@ -450,7 +456,8 @@ async function main() {
         // NB - this step is not performed by CDD providers - for reference only
         // Write a InvestorUniqueness claim for new user
         let scope_did = "0x41434d450000000000000000"; //ACME
-        await writeInvestorUniquenessClaim(polymesh_charles, did, uuid, scope_did, cdd_id);
+        await writeInvestorUniquenessClaim(polymesh_charles, did, uuid, scope_did, cdd_id, "0x49414d52414e444f4d444f4d");
+        await writeInvestorUniquenessClaim(polymesh_charles, did, uuid, scope_did, cdd_id, "0x49414d52414e444f4d444f4f");
     } catch (err) {
         console.log("Unexpected Error: ", err);
         return;

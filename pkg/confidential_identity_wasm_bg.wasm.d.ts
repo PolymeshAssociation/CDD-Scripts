@@ -3,6 +3,7 @@
 export const memory: WebAssembly.Memory;
 export function process_create_cdd_id(a: number, b: number, c: number): void;
 export function process_create_claim_proof(a: number, b: number, c: number, d: number, e: number): void;
+export function process_create_claim_proof_bad(a: number, b: number, c: number, d: number, e: number, f: number, g: number): void;
 export function process_create_mocked_investor_uid(a: number, b: number, c: number): void;
 export function __wbindgen_malloc(a: number): number;
 export function __wbindgen_realloc(a: number, b: number, c: number): number;

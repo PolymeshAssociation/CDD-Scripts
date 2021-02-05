@@ -175,6 +175,32 @@ module.exports.process_create_claim_proof = function(cdd_claim, scoped_claim) {
 };
 
 /**
+* @param {string} cdd_claim
+* @param {string} scoped_claim
+* @param {string} blind
+* @returns {string}
+*/
+module.exports.process_create_claim_proof_bad = function(cdd_claim, scoped_claim, blind) {
+    try {
+        const retptr = wasm.__wbindgen_export_0.value - 16;
+        wasm.__wbindgen_export_0.value = retptr;
+        var ptr0 = passStringToWasm0(cdd_claim, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len0 = WASM_VECTOR_LEN;
+        var ptr1 = passStringToWasm0(scoped_claim, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len1 = WASM_VECTOR_LEN;
+        var ptr2 = passStringToWasm0(blind, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len2 = WASM_VECTOR_LEN;
+        wasm.process_create_claim_proof_bad(retptr, ptr0, len0, ptr1, len1, ptr2, len2);
+        var r0 = getInt32Memory0()[retptr / 4 + 0];
+        var r1 = getInt32Memory0()[retptr / 4 + 1];
+        return getStringFromWasm0(r0, r1);
+    } finally {
+        wasm.__wbindgen_export_0.value += 16;
+        wasm.__wbindgen_free(r0, r1);
+    }
+};
+
+/**
 * @param {string} did
 * @returns {string}
 */

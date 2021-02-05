@@ -33,6 +33,13 @@ export function process_create_cdd_id(cdd_claim: string): string;
 */
 export function process_create_claim_proof(cdd_claim: string, scoped_claim: string): string;
 /**
+* @param {string} cdd_claim
+* @param {string} scoped_claim
+* @param {string} blind
+* @returns {string}
+*/
+export function process_create_claim_proof_bad(cdd_claim: string, scoped_claim: string, blind: string): string;
+/**
 * @param {string} did
 * @returns {string}
 */
