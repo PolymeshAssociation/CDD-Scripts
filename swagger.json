@@ -15,7 +15,7 @@
       },
       "version": "0.1.0"
     },
-    "host": "test-uis.polymesh.live",
+    "host": "test-uis-blue.polymesh.live",
     "basePath": "/",
     "paths": {
       "/healthz": {

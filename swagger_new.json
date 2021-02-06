@@ -1,633 +1,727 @@
 {
-    "swagger": "2.0",
-    "info": {
-      "description": "Provider Identity APIs",
-      "version": "0.1.0",
-      "title": "Provider Identity",
-      "termsOfService": "",
-      "contact": {
-        "email": "support@polymath.network"
-      },
-      "license": {
-        "name": "Apache 2.0",
-        "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "info": {
+    "description": "Provider Identity APIs",
+    "title": "Provider Identity",
+    "contact": {
+      "email": "support@polymath.network"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "0.1.0"
+  },
+  "host": "test-uis-blue.polymesh.live",
+  "basePath": "/",
+  "paths": {
+    "/healthz": {
+      "get": {
+        "tags": [
+          "healthz"
+        ],
+        "operationId": "getHealthz",
+        "responses": {
+          "200": {
+            "description": "success"
+          },
+          "500": {
+            "description": "failure"
+          }
+        }
       }
     },
-    "tags": [
-      {
-        "name": "Identity",
-        "description": "APIs for core identity services",
-        "externalDocs": {
-          "description": "Find out more",
-          "url": "https://polymath.network"
-        }
-      }
-    ],
-    "schemes": [
-      "http"
-    ],
-    "securityDefinitions": {
-      "basicAuth": {
-        "type": "basic"
-      }
-    },
-    "paths": {
-      "/healthz": {
-        "get": {
-          "tags": [
-            "healthz"
-          ],
-          "operationId": "getHealthz",
-          "responses": {
-            "200": {
-              "description": "success"
-            },
-            "500": {
-              "description": "failure"
-            }
+    "/identity": {
+      "post": {
+        "security": [
+          {
+            "basicAuth": []
           }
-        }
-      },
-      "/identity": {
-        "post": {
-          "tags": [
-            "identity"
-          ],
-          "summary": "Create a new uID",
-          "description": "Creates a new uID if the PII provided has not been used already.\n String values for 'payload_value' MUST each be hashed with sha512. Strings should be UTF-8.\n For check name 'BaseIndividual', expected 'payload_name' are 'FirstName', 'LastName', 'BirthDate', 'CountryAlpha2'.\n For check name 'BaseBusiness', expected 'payload_name' are 'BusinessNumber', 'CountryAlpha2'\n",
-          "operationId": "createuID",
-          "security": [
-            {
-              "basicAuth": []
-            }
-          ],
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "The PII Payloads required to populate the check(s) specified",
-              "required": true,
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/Check"
-                }
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "uID": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
+        ],
+        "description": "Creates a new uID if the PII provided has not been used already.\n String values for 'payload_value' MUST each be hashed with sha512. Strings should be UTF-8.\n For check name 'BaseIndividual', expected 'payload_name' are 'FirstName', 'LastName', 'BirthDate', 'CountryAlpha2'.\n For check name 'BaseBusiness', expected 'payload_name' are 'BusinessNumber', 'CountryAlpha2'\n",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Create a new uID",
+        "operationId": "createuID",
+        "parameters": [
+          {
+            "description": "The PII Payloads required to populate the check(s) specified",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Check"
               }
             }
           }
-        }
-      },
-      "/identity/regenerate": {
-        "post": {
-          "tags": [
-            "identity"
-          ],
-          "summary": "Regenerate an identity",
-          "description": "Create a new unique identity with the digital fingerprints supplied. The old unique identity will be marked as inactive, but not removed from the system. Only the original provider can call this API.",
-          "operationId": "regenerateuID",
-          "security": [
-            {
-              "basicAuth": []
-            }
-          ],
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "The PII Payloads required to populate the check(s) specified",
-              "required": true,
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/Check"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "uID": {
+                  "type": "string",
+                  "format": "uuid"
                 }
               }
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "uID": {
-                    "type": "string",
-                    "format": "uuid"
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
-              }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
             }
-          }
-        }
-      },
-      "/identity/search": {
-        "post": {
-          "tags": [
-            "identity"
-          ],
-          "summary": "Search for an identity",
-          "description": "Searches for identity matches based on the PII payloads provided",
-          "operationId": "searchuID",
-          "security": [
-            {
-              "basicAuth": []
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
             }
-          ],
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "The PII Payloads to search for matches",
-              "required": true,
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/Check"
-                }
-              }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
             }
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/IdentitySearchResponse"
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
-              }
-            }
-          }
-        }
-      },
-      "/identity/check": {
-        "post": {
-          "tags": [
-            "identity"
-          ],
-          "summary": "Check to see id a set of PII fingerprints match the provided uID",
-          "description": "Returns match values for each check supplied for the uID supplied",
-          "operationId": "checkuID",
-          "security": [
-            {
-              "basicAuth": []
-            }
-          ],
-          "consumes": [
-            "application/json"
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "parameters": [
-            {
-              "in": "body",
-              "name": "body",
-              "description": "The PII Payloads required to match the identity check(s) specified",
-              "required": true,
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "uID": {
-                    "type": "string",
-                    "format": "uuid"
-                  },
-                  "checks": {
-                    "type": "array",
-                    "items": {
-                      "$ref": "#/definitions/Check"
-                    }
-                  }
-                }
-              }
-            }
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/IdentityCheckResponse"
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
-              }
-            }
-          }
-        }
-      },
-      "/provider/checkTypes": {
-        "get": {
-          "tags": [
-            "provider"
-          ],
-          "summary": "Returns the checks available to a provider",
-          "description": "Returns all uniqueness checks currently available to the provider",
-          "operationId": "getCheckTypes",
-          "security": [
-            {
-              "basicAuth": []
-            }
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "array",
-                "items": {
-                  "$ref": "#/definitions/CheckType"
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
-              }
-            }
-          }
-        }
-      },
-      "/provider/rateLimits": {
-        "get": {
-          "tags": [
-            "provider"
-          ],
-          "summary": "Returns the rate limit usage for provider",
-          "description": "Returns the rate limits for provider, current usage and TTL",
-          "operationId": "getRateLimits",
-          "security": [
-            {
-              "basicAuth": []
-            }
-          ],
-          "produces": [
-            "application/json"
-          ],
-          "responses": {
-            "200": {
-              "description": "successful operation",
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "rateLimit": {
-                    "type": "integer"
-                  },
-                  "rateUsage": {
-                    "type": "integer"
-                  },
-                  "TTL": {
-                    "type": "integer"
-                  }
-                }
-              }
-            },
-            "401": {
-              "description": "unauthorized",
-              "schema": {
-                "$ref": "#/definitions/Unauthorized"
-              }
-            },
-            "403": {
-              "description": "forbidden",
-              "schema": {
-                "$ref": "#/definitions/Forbidden"
-              }
-            },
-            "422": {
-              "description": "invalid request",
-              "schema": {
-                "$ref": "#/definitions/Invalid"
-              }
-            },
-            "500": {
-              "description": "error",
-              "schema": {
-                "$ref": "#/definitions/Error"
-              }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
             }
           }
         }
       }
     },
-    "definitions": {
-      "CheckType": {
-        "type": "object",
-        "properties": {
-          "check_name": {
-            "type": "string"
-          },
-          "check_version": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "check_description": {
-            "type": "string"
+    "/identity/check": {
+      "post": {
+        "security": [
+          {
+            "basicAuth": []
           }
-        }
-      },
-      "Check": {
-        "type": "object",
-        "properties": {
-          "check_name": {
-            "type": "string"
-          },
-          "pii_payloads": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/PiiPayload"
-            }
-          },
-          "secondary_pii_payloads": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/PiiPayload"
-            }
-          }
-        }
-      },
-      "Update": {
-        "type": "object",
-        "properties": {
-          "uID": {
-            "type": "string"
-          },
-          "old_checks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/Check"
-            }
-          },
-          "new_checks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/definitions/Check"
+        ],
+        "description": "Returns match values for each check supplied for the uID supplied",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Check to see id a set of PII fingerprints match the provided uID",
+        "operationId": "checkuID",
+        "parameters": [
+          {
+            "description": "The PII Payloads required to match the identity check(s) specified",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "checks": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Check"
+                  }
+                },
+                "uID": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
             }
           }
-        }
-      },
-      "PiiPayload": {
-        "type": "object",
-        "properties": {
-          "payload_name": {
-            "type": "string"
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IdentitySearchResponse"
+              }
+            }
           },
-          "payload_value": {
-            "type": "string"
-          }
-        }
-      },
-      "IdentityCheckResponse": {
-        "type": "object",
-        "properties": {
-          "check_name": {
-            "type": "string"
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
           },
-          "MatchPercentage": {
-            "type": "integer",
-            "format": "int64"
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
           },
-          "CheckProvider": {
-            "$ref": "#/definitions/CheckProviderDetails"
-          }
-        }
-      },
-      "IdentitySearchResponse": {
-        "type": "object",
-        "properties": {
-          "check_name": {
-            "type": "string"
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
           },
-          "uID": {
-            "type": "string"
-          },
-          "MatchPercentage": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "CheckProvider": {
-            "$ref": "#/definitions/CheckProviderDetails"
-          }
-        }
-      },
-      "CheckProviderDetails": {
-        "type": "object",
-        "properties": {
-          "provider_name": {
-            "type": "string"
-          },
-          "provider_url": {
-            "type": "string"
-          }
-        }
-      },
-      "Error": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "Forbidden": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "Unauthorized": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
-          }
-        }
-      },
-      "Invalid": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string"
-          },
-          "message": {
-            "type": "string"
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
           }
         }
       }
     },
-    "externalDocs": {
-      "description": "Find out more about Identity Providers",
-      "url": "http://polymath.network"
+    "/identity/regenerate": {
+      "post": {
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "description": "Create a new unique identity with the digital fingerprints supplied. The old unique identity will be marked as inactive, but not removed from the system. Only the original provider can call this API.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Regenerate an identity",
+        "operationId": "regenerateuID",
+        "parameters": [
+          {
+            "description": "The PII Payloads required to populate the check(s) specified",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Check"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/RegenerateResponse"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/identity/search": {
+      "post": {
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "description": "Searches for identity matches based on the PII payloads provided",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Search for an identity",
+        "operationId": "searchuID",
+        "parameters": [
+          {
+            "description": "The PII Payloads to search for matches",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Check"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/IdentitySearchResponse"
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/identity/update": {
+      "post": {
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "description": "Update an identity's fingerprints. The old checks are invalidated and the new checks are added.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "identity"
+        ],
+        "summary": "Update an identity's fingerprints",
+        "operationId": "updateuID",
+        "parameters": [
+          {
+            "description": "The PII Payloads must match the identity specified",
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "new_checks": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Check"
+                  }
+                },
+                "old_checks": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/definitions/Check"
+                  }
+                },
+                "uID": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "$ref": "#/definitions/CheckProviderDetails"
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/provider/checkTypes": {
+      "get": {
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "description": "Returns all uniqueness checks currently available to the provider",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "provider"
+        ],
+        "summary": "Returns the checks available to a provider",
+        "operationId": "getCheckTypes",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/CheckType"
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
+    },
+    "/provider/rateLimits": {
+      "get": {
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "description": "Returns the rate limits for provider, current usage and TTL",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "provider"
+        ],
+        "summary": "Returns the rate limit usage for provider",
+        "operationId": "getRateLimits",
+        "responses": {
+          "200": {
+            "description": "successful operation",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "TTL": {
+                  "type": "integer"
+                },
+                "rateLimit": {
+                  "type": "integer"
+                },
+                "rateUsage": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "unauthorized",
+            "schema": {
+              "$ref": "#/definitions/Unauthorized"
+            }
+          },
+          "403": {
+            "description": "forbidden",
+            "schema": {
+              "$ref": "#/definitions/Forbidden"
+            }
+          },
+          "422": {
+            "description": "invalid request",
+            "schema": {
+              "$ref": "#/definitions/Invalid"
+            }
+          },
+          "500": {
+            "description": "error",
+            "schema": {
+              "$ref": "#/definitions/Error"
+            }
+          }
+        }
+      }
     }
+  },
+  "definitions": {
+    "Check": {
+      "type": "object",
+      "properties": {
+        "check_name": {
+          "type": "string"
+        },
+        "pii_payloads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PiiPayload"
+          }
+        },
+        "secondary_pii_sets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SecondaryPiiSet"
+          }
+        }
+      }
+    },
+    "CheckProviderDetails": {
+      "type": "object",
+      "properties": {
+        "provider_name": {
+          "type": "string"
+        },
+        "provider_url": {
+          "type": "string"
+        }
+      }
+    },
+    "CheckType": {
+      "type": "object",
+      "properties": {
+        "check_description": {
+          "type": "string"
+        },
+        "check_name": {
+          "type": "string"
+        },
+        "check_version": {
+          "type": "integer",
+          "format": "int64"
+        }
+      }
+    },
+    "Error": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "Forbidden": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "IdentityCheckResponse": {
+      "type": "object",
+      "properties": {
+        "CheckProvider": {
+          "$ref": "#/definitions/CheckProviderDetails"
+        },
+        "MatchPercentage": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "check_name": {
+          "type": "string"
+        }
+      }
+    },
+    "IdentitySearchResponse": {
+      "type": "object",
+      "properties": {
+        "CheckProvider": {
+          "$ref": "#/definitions/CheckProviderDetails"
+        },
+        "MatchPercentage": {
+          "type": "integer",
+          "format": "int64"
+        },
+        "SecondaryPiiSet": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SecondaryPiiTypeAndExpiry"
+          }
+        },
+        "check_name": {
+          "type": "string"
+        },
+        "uID": {
+          "type": "string"
+        }
+      }
+    },
+    "Invalid": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    },
+    "PiiPayload": {
+      "type": "object",
+      "properties": {
+        "payload_name": {
+          "type": "string"
+        },
+        "payload_value": {
+          "type": "string"
+        }
+      }
+    },
+    "RegenerateResponse": {
+      "type": "object",
+      "properties": {
+        "IdentitiesMatch": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/IdentitySearchResponse"
+          }
+        },
+        "newUID": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    },
+    "SecondaryPiiSet": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/PiiPayload"
+      }
+    },
+    "SecondaryPiiTypeAndExpiry": {
+      "type": "object",
+      "properties": {
+        "IDExpiry": {
+          "type": "string"
+        },
+        "IDType": {
+          "type": "string"
+        }
+      }
+    },
+    "Unauthorized": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        },
+        "type": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "basicAuth": {
+      "type": "basic"
+    }
+  },
+  "tags": [
+    {
+      "description": "APIs for core identity services",
+      "name": "Identity",
+      "externalDocs": {
+        "description": "Find out more",
+        "url": "https://polymath.network"
+      }
+    }
+  ],
+  "externalDocs": {
+    "description": "Find out more about Identity Providers",
+    "url": "http://polymath.network"
   }
+}
