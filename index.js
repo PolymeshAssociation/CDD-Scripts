@@ -228,7 +228,7 @@ async function getPUIS() {
 }
 
 async function piiHashMatchesUid(puis, pii_hash, uId) {
-    let puis_response = await puis.apis.identity.checkuID({checks: {checks: pii_hash, uID: uId}});
+    let puis_response = await puis.apis.identity.checkuID({body: {checks: pii_hash, uID: uId}});    
     let match = puis_response.body[0];
     if ("check_name" in match) {
         return [true, match.CheckProvider.provider_name, match.CheckProvider.provider_url];
@@ -238,17 +238,23 @@ async function piiHashMatchesUid(puis, pii_hash, uId) {
 }
 
 async function piiExists(puis, pii_hash) {
-    let puis_response = await puis.apis.identity.searchuID({body: pii_hash});
-    let match = puis_response.body[0];
-    if ("check_name" in match) {
-        return [true, match.CheckProvider.provider_name, match.CheckProvider.provider_url];
-    } else {
+    // Take a copy of the full pii hash and remove the secondary pii sets
+    // which are not needed for the searchuID endpoint
+    let primary_pii = JSON.parse(JSON.stringify(pii_hash));
+    delete primary_pii[0]['secondary_pii_sets'];
+    let puis_response = await puis.apis.identity.searchuID({body: primary_pii});
+    if (puis_response.body.length == 0) {
+        // primary pii data doesn't have a match in the PUIS
         return [false, "", ""];
     }
+    let match = puis_response.body[0];
+        // if ("check_name" in match) {
+    return [true, match.CheckProvider.provider_name, match.CheckProvider.provider_url];
+        // } else {
 }
 
-async function getUid(puis, payload) {
-    let puis_response = await puis.apis.identity.createuID({IdentityChecks: payload});
+async function getUid(puis, pii_hash) {
+    let puis_response = await puis.apis.identity.createuID({body: pii_hash});
     let uId = puis_response.body.uID;        
     return uId;
 }
@@ -291,24 +297,40 @@ function createDummyPiiHash() {
     return [
         {
           "check_name": "BaseIndividual",
-          "pii_payloads": [
-            {
-                "payload_name": "FirstName",
-                "payload_value": sha512(Math.random().toString(36).substring(7))
-            },
-            {
-                "payload_name": "LastName",
-                "payload_value": sha512(Math.random().toString(36).substring(7))
-            },
-            {
-                "payload_name": "BirthDate",
-                "payload_value": sha512(Math.random().toString(36).substring(7))
-            },
-            {
-                "payload_name": "CountryAlpha2",
-                "payload_value": "CA"
-            }
-          ]
+            "pii_payloads": [
+                {
+                    "payload_name": "FirstName",
+                    "payload_value": sha512(Math.random().toString(36).substring(7))
+                },
+                {
+                    "payload_name": "LastName",
+                    "payload_value": sha512(Math.random().toString(36).substring(7))
+                },
+                {
+                    "payload_name": "BirthDate",
+                    "payload_value": sha512(Math.random().toString(36).substring(7))
+                },
+                {
+                    "payload_name": "CountryAlpha2",
+                    "payload_value": "CA"
+                }
+            ],
+            "secondary_pii_sets": [
+                [
+                    {
+                        "payload_name": "IDType",
+                        "payload_value": "PASSPORT"
+                    },
+                    {
+                        "payload_name": "IDNumber",
+                        "payload_value": sha512(Math.random().toString(36).substring(7))
+                    },
+                    {
+                        "payload_name": "IDExpiry",
+                        "payload_value": "2033-11-22T00:00:00Z"
+                    }
+                ]
+            ],
         }
     ];
 }
@@ -316,25 +338,39 @@ function createDummyPiiHash() {
 function createFixedPiiHash() {
     return [
         {
-          "check_name": "BaseIndividual",
-          "pii_payloads": [
-            {
-                "payload_name": "FirstName",
-                "payload_value": sha512("Adam1")
-            },
-            {
-                "payload_name": "LastName",
-                "payload_value": sha512("Dossa")
-            },
-            {
-                "payload_name": "BirthDate",
-                "payload_value": sha512("19/11/1979")
-            },
-            {
-                "payload_name": "CountryAlpha2",
-                "payload_value": "UK"
-            }
-          ]
+            "check_name": "BaseIndividual",
+            "pii_payloads": [
+                {
+                    "payload_name": "FirstName",
+                    "payload_value": sha512("Adam1")
+                },
+                {
+                    "payload_name": "LastName",
+                    "payload_value": sha512("Dossa")
+                },
+                {
+                    "payload_name": "BirthDate",
+                    "payload_value": sha512("19/11/1979")
+                },
+                {
+                    "payload_name": "CountryAlpha2",
+                    "payload_value": "UK"
+                }
+            ],
+            "secondary_pii_sets": [
+                {
+                    "payload_name": "IDType",
+                    "payload_value": "PASSPORT"
+                },
+                {
+                    "payload_name": "IDNumber",
+                    "payload_value": sha512("1234")
+                },
+                {
+                    "payload_name": "IDExpiry",
+                    "payload_value": "2033-11-22T00:00:00Z"
+                }
+            ]
         }
     ];
 }
@@ -432,4 +468,9 @@ async function main() {
     }
 }
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error("ERROR: ", error);
+    process.exit(1);
+  });
