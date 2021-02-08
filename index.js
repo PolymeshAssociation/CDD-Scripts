@@ -217,7 +217,7 @@ async function getPolymesh() {
 }
 
 async function getPUIS() {
-    let swagger_file = "./swagger_new.json";
+    let swagger_file = "./swagger.json";
     var url = path.join(__dirname, swagger_file);
     let swagger_spec = JSON.parse(fs.readFileSync(url));
 
@@ -468,4 +468,9 @@ async function main() {
     }
 }
 
-main();
+main()
+  .then(() => process.exit(0))
+  .catch(error => {
+    console.error("ERROR: ", error);
+    process.exit(1);
+  });
