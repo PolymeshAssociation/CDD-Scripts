@@ -13,6 +13,6 @@
     "@types/uuid": "^8.3.0",
     "js-sha512": "^0.8.0",
     "swagger-client": "^3.12.1",
-    "wasm-builder": "./pkg"
+    "@polymathnetwork/confidential-identity-nodejs": "1.0.0"
   }
 }

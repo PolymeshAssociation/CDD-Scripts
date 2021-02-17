@@ -7,7 +7,7 @@ const fs = require('fs');
 const path = require('path');
 const sha512 = require('js-sha512');
 const crypto = require('crypto');
-const confidential_identity = require('./pkg/confidential_identity_wasm');
+const confidential_identity = require('@polymathnetwork/confidential-identity-nodejs');
 const { u8aToHex, hexToU8a, stringToU8a } = require('@polkadot/util');
 
 // Mock CDD Process
@@ -75,7 +75,7 @@ async function new_user(primary_key, pii_hash) {
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id)
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -135,7 +135,7 @@ async function existing_user_with_existing_identity(primary_key, pii_hash, v4_un
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id) 
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -197,7 +197,7 @@ async function existing_user_with_new_identity(primary_key, pii_hash, v4_unique_
             investor_unique_id: Array.from(hexToU8a(unique_id))
         })
     );
-    cdd_id = "0x" + createHexString(JSON.parse(cdd_id).cdd_id);
+    cdd_id = "0x" + createHexString(JSON.parse(cdd_id));
     console.log("CDD_ID Derived: ", cdd_id)
 
     console.log('****Polymesh***** Writing CDD Attestation')
@@ -228,7 +228,11 @@ async function getPUIS() {
 }
 
 async function piiHashMatchesUid(puis, pii_hash, uId) {
-    let puis_response = await puis.apis.identity.checkuID({body: {checks: pii_hash, uID: uId}});    
+    // Take a copy of the full pii hash and remove the override flag
+    // which is not needed for the checkuID endpoint
+    let primary_pii = JSON.parse(JSON.stringify(pii_hash));    
+    delete primary_pii[0]["override"];
+    let puis_response = await puis.apis.identity.checkuID({body: {checks: [primary_pii[0].check], uID: uId}});    
     let match = puis_response.body[0];
     if ("check_name" in match) {
         return [true, match.CheckProvider.provider_name, match.CheckProvider.provider_url];
@@ -241,6 +245,7 @@ async function piiExists(puis, pii_hash) {
     // Take a copy of the full pii hash and remove the secondary pii sets
     // which are not needed for the searchuID endpoint
     let primary_pii = JSON.parse(JSON.stringify(pii_hash));
+    primary_pii = [primary_pii[0]["check"]];
     delete primary_pii[0]['secondary_pii_sets'];
     let puis_response = await puis.apis.identity.searchuID({body: primary_pii});
     if (puis_response.body.length == 0) {
@@ -296,41 +301,44 @@ async function writeCddClaim(polymesh, did, cdd_id) {
 function createDummyPiiHash() {
     return [
         {
-          "check_name": "BaseIndividual",
-            "pii_payloads": [
-                {
-                    "payload_name": "FirstName",
-                    "payload_value": sha512(Math.random().toString(36).substring(7))
-                },
-                {
-                    "payload_name": "LastName",
-                    "payload_value": sha512(Math.random().toString(36).substring(7))
-                },
-                {
-                    "payload_name": "BirthDate",
-                    "payload_value": sha512(Math.random().toString(36).substring(7))
-                },
-                {
-                    "payload_name": "CountryAlpha2",
-                    "payload_value": "CA"
-                }
-            ],
-            "secondary_pii_sets": [
-                [
+            "check": {
+                "check_name": "BaseIndividual",
+                "pii_payloads": [
                     {
-                        "payload_name": "IDType",
-                        "payload_value": "PASSPORT"
-                    },
-                    {
-                        "payload_name": "IDNumber",
+                        "payload_name": "FirstName",
                         "payload_value": sha512(Math.random().toString(36).substring(7))
                     },
                     {
-                        "payload_name": "IDExpiry",
-                        "payload_value": "2033-11-22T00:00:00Z"
+                        "payload_name": "LastName",
+                        "payload_value": sha512(Math.random().toString(36).substring(7))
+                    },
+                    {
+                        "payload_name": "BirthDate",
+                        "payload_value": sha512(Math.random().toString(36).substring(7))
+                    },
+                    {
+                        "payload_name": "CountryAlpha2",
+                        "payload_value": "CA"
                     }
-                ]
-            ],
+                ],
+                "secondary_pii_sets": [
+                    [
+                        {
+                            "payload_name": "IDType",
+                            "payload_value": "PASSPORT"
+                        },
+                        {
+                            "payload_name": "IDNumber",
+                            "payload_value": sha512(Math.random().toString(36).substring(7))
+                        },
+                        {
+                            "payload_name": "IDExpiry",
+                            "payload_value": "2033-11-22T00:00:00Z"
+                        }
+                    ]
+                ],
+            },
+            "override": true
         }
     ];
 }
@@ -338,39 +346,45 @@ function createDummyPiiHash() {
 function createFixedPiiHash() {
     return [
         {
-            "check_name": "BaseIndividual",
-            "pii_payloads": [
-                {
-                    "payload_name": "FirstName",
-                    "payload_value": sha512("Adam1")
-                },
-                {
-                    "payload_name": "LastName",
-                    "payload_value": sha512("Dossa")
-                },
-                {
-                    "payload_name": "BirthDate",
-                    "payload_value": sha512("19/11/1979")
-                },
-                {
-                    "payload_name": "CountryAlpha2",
-                    "payload_value": "UK"
-                }
-            ],
-            "secondary_pii_sets": [
-                {
-                    "payload_name": "IDType",
-                    "payload_value": "PASSPORT"
-                },
-                {
-                    "payload_name": "IDNumber",
-                    "payload_value": sha512("1234")
-                },
-                {
-                    "payload_name": "IDExpiry",
-                    "payload_value": "2033-11-22T00:00:00Z"
-                }
-            ]
+            "check": {
+
+                "check_name": "BaseIndividual",
+                "pii_payloads": [
+                    {
+                        "payload_name": "FirstName",
+                        "payload_value": sha512("Adam1")
+                    },
+                    {
+                        "payload_name": "LastName",
+                        "payload_value": sha512("Dossa")
+                    },
+                    {
+                        "payload_name": "BirthDate",
+                        "payload_value": sha512("19/11/1979")
+                    },
+                    {
+                        "payload_name": "CountryAlpha2",
+                        "payload_value": "UK"
+                    }
+                ],
+                "secondary_pii_sets": [
+                    [
+                        {
+                            "payload_name": "IDType",
+                            "payload_value": "PASSPORT"
+                        },
+                        {
+                            "payload_name": "IDNumber",
+                            "payload_value": sha512("1234")
+                        },
+                        {
+                            "payload_name": "IDExpiry",
+                            "payload_value": "2033-11-22T00:00:00Z"
+                        }
+                    ]
+                ]
+            },
+            "override": true
         }
     ];
 }
