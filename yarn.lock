@@ -314,6 +314,11 @@
     "@types/websocket" "^1.0.1"
     websocket "^1.0.33"
 
+"@polymathnetwork/confidential-identity-nodejs@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@polymathnetwork/confidential-identity-nodejs/-/confidential-identity-nodejs-1.0.0.tgz#cced62cc3714a2d0673718d7d6af4082fe4c6442"
+  integrity sha512-LD6/wzUS2h41ehYtm9+xa+1jW081TVoVKek9a2zLgPLSJZD1I0wpNEVUwji55ZKw30qC9QqUSyUHMrrBU5CfjQ==
+
 "@polymathnetwork/polymesh-sdk@4.0.0-alpha.30":
   version "4.0.0-alpha.30"
   resolved "https://registry.yarnpkg.com/@polymathnetwork/polymesh-sdk/-/polymesh-sdk-4.0.0-alpha.30.tgz#9fb9a5685432b3aef74cdae057c4fa64df5e06cf"
@@ -1082,9 +1087,6 @@ util-deprecate@^1.0.1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/util-deprecate/-/util-deprecate-1.0.2.tgz#450d4dc9fa70de732762fbd2d4a28981419a0ccf"
   integrity sha1-RQ1Nyfpw3nMnYvvS1KKJgUGaDM8=
-
-wasm-builder@./pkg:
-  version "1.0.0"
 
 websocket@^1.0.33:
   version "1.0.33"
